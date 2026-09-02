@@ -1,6 +1,6 @@
 <!--
   Vinzify - ausgelieferte Anwendung (eine selbstenthaltene Datei).
-  Erzeugt von entwuerfe/bau/_build.py am 2026-09-01 22:00:04.
+  Erzeugt von entwuerfe/bau/_build.py am 2026-09-02 08:44:04.
   Eingebettete Module (feste Reihenfolge):
     - vinzify.konfig.js
     - vinzify.log.js
@@ -126,6 +126,13 @@ body {
 .einrichtung-hinweis {
   font-size: 14px;
   color: var(--sub, #8b95a3);
+}
+
+/* Warnung zur Rückleitungsadresse: Spotify akzeptiert nur localhost oder
+   https — bei file:// oder LAN-http wird das hier sichtbar erklärt. */
+.einrichtung-adresse-warnung {
+  color: var(--fehler, #ff6b7f);
+  max-width: 560px;
 }
 
 /* --- Kinder-Platzhalter (Gerüst für M4) --- */
@@ -565,10 +572,13 @@ body {
    ============================================================ */
 
 /* --- Bühne der Kinderoberfläche (#kind-buehne) --- */
+/* Füllt genau den Bildschirm; gescrollt wird NUR die Ebenen-Fläche innen,
+   damit der Player-Balken unten stehen bleibt (wie Entwurf A). */
 #kind-buehne {
   width: 100%;
   max-width: 1280px;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   margin: 0 auto;
   padding: 18px;
   background: var(--grund, #0d0f12);
@@ -576,14 +586,18 @@ body {
 }
 
 .kind-buehne {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .kind-ebene {
   width: 100%;
-  min-height: 300px;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* Kachel-Raster: feste Werte, KEINE CSS-Variable (E18). */
@@ -677,6 +691,39 @@ body {
 .kind-kachel:focus {
   border-color: var(--form, #c3ccd8);
   background: var(--streifen, #1c2129);
+}
+
+/* Runde Kachel (E9: Musik ist rund, Geschichte eckig) — Musik-Einträge der
+   obersten Ebene als Kreise mit Namen darunter, OHNE Karten-Rahmen. */
+.kind-kachel.rund {
+  align-items: center;
+  text-align: center;
+  border: none;
+  background: transparent;
+  padding: 4px 4px 2px;
+}
+
+.kind-kachel.rund:hover,
+.kind-kachel.rund:focus {
+  border-color: transparent;
+  background: transparent;
+}
+
+.kind-kachel.rund:focus {
+  outline: 2px solid var(--form, #c3ccd8);
+  outline-offset: 2px;
+}
+
+.kind-kachel.rund .kind-kachel-bild {
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+}
+
+.kind-kachel.rund .kind-kachel-name {
+  color: var(--text2, #dfe6ef);
 }
 
 .kind-kachel-bild {
@@ -832,7 +879,16 @@ body {
 }
 
 /* --- Player-Balken (von jeder Ebene sichtbar; 123 — REINE Anzeige) --- */
+/* Leer (es spielt nichts) → ganz ausblenden, damit keine leere Fläche
+   stehen bleibt. */
+.kind-player-balken:empty {
+  display: none;
+}
+
+/* Letztes Element der Bühnen-Spalte: bleibt unten stehen, während die
+   Ebenen-Fläche darüber scrollt (wie Entwurf A: Player am unteren Rand). */
 .kind-player-balken {
+  flex: 0 0 auto;
   width: 100%;
   min-height: 96px;
   padding: 12px;
@@ -2487,6 +2543,14 @@ Vinzify.Anmeldung.SCHLUESSEL = 'vinzify.zugang.v1';
 /* Alphabet für base64url-Zufallswerte (A–Z, a–z, 0–9, '-', '_'). */
 var ANMELDUNG_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 
+/* Letzte Fehlermeldung des Tokentauschs (Spotify error/error_description),
+   für verständliche Hinweise in der Einrichtung. Wirft nie. */
+var ANMELDUNG_FEHLER = '';
+
+Vinzify.Anmeldung.fehlermeldung = function () {
+  return ANMELDUNG_FEHLER;
+};
+
 /* zufallsZeichenkette(laenge): base64url-Zeichenkette der Länge laenge über
    crypto.getRandomValues. Ohne crypto stiller Math.random-Fallback (ohne
    Warnung). Gibt immer eine Zeichenkette zurück. Wirft nie. */
@@ -2597,14 +2661,16 @@ Vinzify.Anmeldung.loginUrl = async function (grundUrl, clientId, pruefwert, zust
 /* tauscheCode(grundUrl, clientId, pruefwert, code): async; tauscht den Code
    über /api/token gegen Zugangs- und Erneuerungs-Token (PKCE mit
    code_verifier). Gibt das JSON zurück (zugang/erneuere/ablaeuft_in) oder
-   null bei Fehler. Wirft nie. */
+   null bei Fehler. Bei Fehler merkt es die Spotify-Meldung (error/
+   error_description) für ANMELDUNG_FEHLER. Wirft nie. */
 Vinzify.Anmeldung.tauscheCode = async function (grundUrl, clientId, pruefwert, code) {
-  var rumpf, antwort, daten;
+  var rumpf, antwort, daten, fehlerText, json;
   rumpf = 'grant_type=authorization_code' +
     '&code=' + encodeURIComponent(code) +
     '&redirect_uri=' + encodeURIComponent(grundUrl) +
     '&client_id=' + encodeURIComponent(clientId) +
     '&code_verifier=' + encodeURIComponent(pruefwert);
+  ANMELDUNG_FEHLER = '';
   try {
     antwort = await fetch(Vinzify.Anmeldung.ENDECKT + '/api/token', {
       method: 'POST',
@@ -2612,11 +2678,23 @@ Vinzify.Anmeldung.tauscheCode = async function (grundUrl, clientId, pruefwert, c
       body: rumpf
     });
     if (!antwort.ok) {
+      fehlerText = '';
+      try {
+        json = await antwort.json();
+        if (json && typeof json.error_description === 'string' && json.error_description !== '') {
+          fehlerText = json.error_description;
+        } else if (json && typeof json.error === 'string' && json.error !== '') {
+          fehlerText = json.error;
+        }
+      } catch (fehler) { fehlerText = ''; }
+      if (fehlerText === '') { fehlerText = 'HTTP ' + antwort.status; }
+      ANMELDUNG_FEHLER = fehlerText;
       return null;
     }
     daten = await antwort.json();
     return daten;
   } catch (fehler) {
+    ANMELDUNG_FEHLER = 'Netzwerk-/CORS-Fehler beim Tokentausch';
     return null;
   }
 };
@@ -5001,11 +5079,13 @@ function kindZurueckKopf(zielEl, titel, rueckruf) {
 }
 
 /* kindKachel: Kachel mit Platzhalterfläche (deterministische Farbe), großer
-   Ziffer und Name für den Vater. Klick → rueckruf(id, art). */
-function kindKachel(zielEl, id, art, name, nummer, rueckruf, bild) {
+   Ziffer und Name für den Vater. Klick → rueckruf(id, art). Optional bild
+   (M8.7, 47) als Daten-/Webadresse; optional rund === true (E9: Musik ist
+   rund, Geschichte eckig) schaltet die Kachel auf die runde Form. */
+function kindKachel(zielEl, id, art, name, nummer, rueckruf, bild, rund) {
   var kachel, flaeche, ziffer, nameEl, bildEl;
   try {
-    kachel = kindElement('button', 'kind-kachel');
+    kachel = kindElement('button', 'kind-kachel' + (rund === true ? ' rund' : ''));
     kachel.setAttribute('type', 'button');
     flaeche = kindElement('span', 'kind-kachel-bild');
     if (typeof bild === 'string' && bild !== '') {
@@ -5119,6 +5199,7 @@ function kindSammlungBild(stand, sammlung) {
    (nur textContent). Wirft nie. */
 Vinzify.Kind.zeigeTop = function (stand, zielEl, rueckruf) {
   var quellen, einstiegspunkte, sammlungen, i, j, quelle, e, nummerG, nummerM;
+  var hatMusik, hatGeschichten, hatSammlung;
   try {
     kindLeeren(zielEl);
     if (!zielEl) { return; }
@@ -5126,41 +5207,57 @@ Vinzify.Kind.zeigeTop = function (stand, zielEl, rueckruf) {
     einstiegspunkte = (stand && stand.einstiegspunkte) ? stand.einstiegspunkte : [];
     sammlungen = (stand && stand.sammlungen) ? stand.sammlungen : [];
 
-    /* Bereich Geschichten (mit Farbband, E3/E6). */
-    kindBereichKopf(zielEl, 'Geschichten', KIND_BAND_GESCHICHTEN);
-    nummerG = 0;
+    /* Nur Köpfe zeichnen, die auch Einträge haben (keine leere Überschrift). */
+    hatMusik = false; hatGeschichten = false; hatSammlung = (sammlungen.length > 0);
     for (i = 0; i < quellen.length; i = i + 1) {
       quelle = quellen[i];
-      if (!quelle || quelle.bereich !== 'geschichten') { continue; }
-      if (quelle.sammlung === true) {
-        nummerG = nummerG + 1;
-        kindKachel(zielEl, quelle.id, 'quelle', quelle.name, nummerG, rueckruf);
-      } else {
-        for (j = 0; j < einstiegspunkte.length; j = j + 1) {
-          e = einstiegspunkte[j];
-          if (e && e.quelle === quelle.id && e.art === 'album') {
-            nummerG = nummerG + 1;
-            kindKachel(zielEl, e.id, 'album', e.name, nummerG, rueckruf);
-          }
-        }
-      }
+      if (!quelle) { continue; }
+      if (quelle.bereich === 'musik') { hatMusik = true; }
+      else if (quelle.bereich === 'geschichten') { hatGeschichten = true; }
     }
-    for (i = 0; i < sammlungen.length; i = i + 1) {
-      if (sammlungen[i]) {
-        nummerG = nummerG + 1;
-        kindKachel(zielEl, sammlungen[i].id, 'sammlung', sammlungen[i].name, nummerG, rueckruf,
-          kindSammlungBild(stand, sammlungen[i]));
+
+    /* Bereich Musik ZUERST (E5-Richtung aus Entwurf A: Musik ohne Scrollen
+       oben; E9: rund = Musik). Je Musik-Quelle EINE runde Kachel. */
+    if (hatMusik) {
+      kindBereichKopf(zielEl, 'Musik', KIND_BAND_MUSIK);
+      nummerM = 0;
+      for (i = 0; i < quellen.length; i = i + 1) {
+        quelle = quellen[i];
+        if (!quelle || quelle.bereich !== 'musik') { continue; }
+        nummerM = nummerM + 1;
+        kindKachel(zielEl, quelle.id, 'musik', quelle.name, nummerM, rueckruf, null, true);
       }
     }
 
-    /* Bereich Musik (mit Farbband). */
-    kindBereichKopf(zielEl, 'Musik', KIND_BAND_MUSIK);
-    nummerM = 0;
-    for (i = 0; i < quellen.length; i = i + 1) {
-      quelle = quellen[i];
-      if (!quelle || quelle.bereich !== 'musik') { continue; }
-      nummerM = nummerM + 1;
-      kindKachel(zielEl, quelle.id, 'musik', quelle.name, nummerM, rueckruf);
+    /* Bereich Geschichten (eckig = Geschichte, E9; mit Farbband, E3/E6):
+       je Quelle mit sammlung===true EINE Kachel (art 'quelle'), sonst je
+       Album der Quelle; danach jede Sammlung (art 'sammlung'). */
+    if (hatGeschichten || hatSammlung) {
+      kindBereichKopf(zielEl, 'Geschichten', KIND_BAND_GESCHICHTEN);
+      nummerG = 0;
+      for (i = 0; i < quellen.length; i = i + 1) {
+        quelle = quellen[i];
+        if (!quelle || quelle.bereich !== 'geschichten') { continue; }
+        if (quelle.sammlung === true) {
+          nummerG = nummerG + 1;
+          kindKachel(zielEl, quelle.id, 'quelle', quelle.name, nummerG, rueckruf);
+        } else {
+          for (j = 0; j < einstiegspunkte.length; j = j + 1) {
+            e = einstiegspunkte[j];
+            if (e && e.quelle === quelle.id && e.art === 'album') {
+              nummerG = nummerG + 1;
+              kindKachel(zielEl, e.id, 'album', e.name, nummerG, rueckruf);
+            }
+          }
+        }
+      }
+      for (i = 0; i < sammlungen.length; i = i + 1) {
+        if (sammlungen[i]) {
+          nummerG = nummerG + 1;
+          kindKachel(zielEl, sammlungen[i].id, 'sammlung', sammlungen[i].name, nummerG, rueckruf,
+            kindSammlungBild(stand, sammlungen[i]));
+        }
+      }
     }
   } catch (fehler) { }
 };
@@ -5342,8 +5439,9 @@ Vinzify.Kind.starte = function (stand, zielEl, aktionen) {
     Vinzify.Kind.playerEl = balken;
     ebene = kindElement('div', 'kind-ebene kachel-raster');
     Vinzify.Kind.ebeneEl = ebene;
-    rahmen.appendChild(balken);
+    /* Inhalt zuerst, Player-Balken danach (unten; leer → CSS blendet ihn aus). */
     rahmen.appendChild(ebene);
+    rahmen.appendChild(balken);
     zielEl.appendChild(rahmen);
     Vinzify.Kind.zeigeTop(stand, ebene, kindAktionRueckruf(Vinzify.Kind.aktionen));
   } catch (fehler) { }
@@ -5738,14 +5836,29 @@ Vinzify.Huelle.sichtbarkeitStarten = function (pausierenFn, fortsetzenFn) {
 };
 
 /* rueckleitungsAdresse: die exakte Rückleitungsadresse zum Kopieren (30),
-   als Zeichenkette. Defensiv; wirft nie. */
+   als Zeichenkette. WICHTIG: immer OHNE Query-String/Hash (origin + Pfad) —
+   nach der Rückkehr von Spotify steht sonst „?code=…&state=…“ in der
+   Adresszeile, und der Tokentausch müsste eine mit diesen Parametern
+   verschmutzte redirect_uri senden, die Spotify ablehnt (redirect_uri muss
+   exakt der bei der Authorisierung entsprechen). Defensiv; wirft nie. */
 Vinzify.Huelle.rueckleitungsAdresse = function () {
+  var url, frage, raute, ende;
   try {
+    if (window.location && typeof window.location.origin === 'string' &&
+        window.location.origin !== '' && typeof window.location.pathname === 'string') {
+      return window.location.origin + window.location.pathname;
+    }
     if (window.location && typeof window.location.href === 'string' && window.location.href !== '') {
-      return window.location.href;
+      url = window.location.href;
+      frage = url.indexOf('?');
+      raute = url.indexOf('#');
+      ende = url.length;
+      if (frage >= 0 && frage < ende) { ende = frage; }
+      if (raute >= 0 && raute < ende) { ende = raute; }
+      return url.substring(0, ende);
     }
   } catch (fehler) {
-    /* weiter unten */
+    /* wirft nie */
   }
   return '';
 };
@@ -5800,6 +5913,7 @@ var VERWALTUNG_RUECKRUF = null;    /* gemerkter Rückruf des Aufrufers */
 var VERWALTUNG_SAMMLUNG_OFFEN = null; /* geöffnete Sammlung in s2 (M7.4, 44) */
 var VERWALTUNG_NEUSTART_PHASE = false;    /* Warte-Phase der Neustart-Überbrückung läuft (110) */
 var VERWALTUNG_NEUSTART_ERLEDIGT = false; /* Überbrückung endgültig abgeschlossen (111) */
+var VERWALTUNG_STANDARD_PIN = '0000';     /* Standard-PIN, solange keine eigene gesetzt (200) */
 
 /* Suchindex (259): Einstellung, Gruppe, Ansicht.
    Übernommen aus dem Mockup verwaltung-v1-seitenleiste.html (~30 Einträge). */
@@ -5838,12 +5952,10 @@ Vinzify.Verwaltung.INDEX = [
 
 /* --- Öffentliche API ----------------------------------------------------- */
 
-/* pinPruefen: liest die PIN aus der Konfiguration (200). true NUR wenn die
-   gespeicherte PIN nicht leer ist UND eingabe === pin. Defensiv: fehlt die
-   Konfigurationsschicht oder ist die PIN leer, ist das Ergebnis false.
-   Wirft nie. */
-Vinzify.Verwaltung.pinPruefen = function (eingabe) {
-  var konfig, pin;
+/* verwaltungPinGelesen: gespeicherte PIN aus der Konfiguration; '' wenn
+   keine gesetzt. Wirft nie. */
+function verwaltungPinGelesen() {
+  var konfig;
   try {
     konfig = (Vinzify.Konfig && typeof Vinzify.Konfig.laden === 'function')
       ? Vinzify.Konfig.laden()
@@ -5851,13 +5963,28 @@ Vinzify.Verwaltung.pinPruefen = function (eingabe) {
   } catch (fehler) {
     konfig = null;
   }
-  pin = (konfig && konfig.pin !== undefined && konfig.pin !== null)
+  return (konfig && konfig.pin !== undefined && konfig.pin !== null)
     ? String(konfig.pin)
     : '';
+}
+
+/* pinPruefen: liest die PIN aus der Konfiguration (200). Ist noch keine
+   eigene PIN gesetzt, gilt die Standard-PIN (VERWALTUNG_STANDARD_PIN) —
+   so ist der Zugang nie versehentlich verschlossen. Ist eine eigene PIN
+   gesetzt, zählt nur sie. Wirft nie. */
+Vinzify.Verwaltung.pinPruefen = function (eingabe) {
+  var pin;
+  pin = verwaltungPinGelesen();
   if (pin === '') {
-    return false;
+    pin = VERWALTUNG_STANDARD_PIN;
   }
   return String(eingabe) === pin;
+};
+
+/* pinEigenGesetzt: true, wenn in der Konfiguration bereits eine eigene PIN
+   gespeichert ist (für den Hinweis in der PIN-Ansicht). Wirft nie. */
+Vinzify.Verwaltung.pinEigenGesetzt = function () {
+  return verwaltungPinGelesen() !== '';
 };
 
 /* entsperrt: true, wenn in dieser Sitzung eine richtige PIN eingegeben
@@ -6082,7 +6209,14 @@ function verwaltungPinZeichnen(rueckruf) {
     titel = verwaltungElement('div', 'verw-pin-titel');
     titel.textContent = 'Vinzify Verwaltung';
     unter = verwaltungElement('div', 'verw-pin-unter');
-    unter.textContent = 'Zugang geschützt — PIN eingeben';
+    /* Ohne eigene gesetzte PIN gilt die Standard-PIN (Hinweis erscheint erst
+       nach dem 4-Tipp-Zugang 266; 200 hält nur ein Kind ab). */
+    if (typeof Vinzify.Verwaltung.pinEigenGesetzt === 'function' &&
+        Vinzify.Verwaltung.pinEigenGesetzt() === false) {
+      unter.textContent = 'Zugang geschützt — Standard-PIN: ' + VERWALTUNG_STANDARD_PIN;
+    } else {
+      unter.textContent = 'Zugang geschützt — PIN eingeben';
+    }
     eingabe = verwaltungElement('input', 'verw-pin-eingabe');
     eingabe.setAttribute('type', 'password');
     eingabe.setAttribute('inputmode', 'numeric');
@@ -8140,6 +8274,7 @@ function verwaltungAnsichtSystem(inhalt, rueckruf) {
       <label class="einrichtung-beschriftung" for="einrichtung-adresse">Rückleitungsadresse</label>
       <textarea id="einrichtung-adresse" class="einrichtung-adresse" rows="2" readonly></textarea>
       <p class="einrichtung-hinweis">Zum Kopieren antippen, dann Strg+C (E12).</p>
+      <p class="einrichtung-hinweis einrichtung-adresse-warnung" id="einrichtung-adresse-warnung" aria-live="polite"></p>
 
       <section class="einrichtung-abschnitt" aria-label="Anmeldung">
         <h2 class="einrichtung-untertitel">Anmeldung</h2>
@@ -8154,8 +8289,8 @@ function verwaltungAnsichtSystem(inhalt, rueckruf) {
 
       <section class="einrichtung-abschnitt" id="einrichtung-pin-abschnitt" aria-label="PIN">
         <h2 class="einrichtung-untertitel">PIN festlegen</h2>
-        <p class="einrichtung-text">Die PIN schützt die Verwaltung. Nach der Anmeldung
-        erscheint die Kinderoberfläche.</p>
+        <p class="einrichtung-text">Die PIN schützt die Verwaltung. Ohne eigene PIN
+        gilt der Standard 0000 — lege hier am besten gleich eine eigene fest.</p>
         <input id="einrichtung-pin" class="einrichtung-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="PIN">
         <button id="einrichtung-pin-speichern" class="einrichtung-knopf" type="button">PIN speichern</button>
         <p class="einrichtung-hinweis" id="einrichtung-pin-hinweis"></p>
@@ -8257,6 +8392,16 @@ function verwaltungAnsichtSystem(inhalt, rueckruf) {
       konfig = (Vinzify.Konfig && typeof Vinzify.Konfig.laden === 'function') ? Vinzify.Konfig.laden() : null;
     } catch (fehler) { konfig = null; }
     return konfig;
+  }
+
+  /* anstrichAnwenden: wendet den gespeicherten Anstrich auf das Dokument an
+     (201a/201d). Läuft beim (Neu-)Aufbau der Kinderansicht und der
+     Einrichtung — dadurch gilt ein in der Verwaltung gewählter Anstrich,
+     sobald der Verwaltungsbereich geschlossen wird. Wirft nie. */
+  function anstrichAnwenden() {
+    if (Vinzify.Anstrich && typeof Vinzify.Anstrich.anwenden === 'function') {
+      try { Vinzify.Anstrich.anwenden(document.documentElement); } catch (fehler) { }
+    }
   }
 
   /* --- Datenstand: Einstiegspunkte/Kapitel/Quellen auflösen -------------- */
@@ -8467,6 +8612,9 @@ function verwaltungAnsichtSystem(inhalt, rueckruf) {
 
   function kindStarten() {
     var ziel;
+    /* Anstrich aus der Konfiguration anwenden (201d — gilt nach dem
+       Schließen der Verwaltung; kindStarten läuft auch beim Neuaufbau 203). */
+    anstrichAnwenden();
     /* M8.3: kein altes Timer-Menü zurücklassen. */
     timerMenuSchliessen();
     ziel = kindBuehne;
@@ -9147,13 +9295,62 @@ function verwaltungAnsichtSystem(inhalt, rueckruf) {
 
   /* --- Einrichtung (29/30) ------------------------------------------------ */
 
+  /* redirectHinweis (Spotify, 16/18): Spotify erlaubt als Redirect-URI nur
+     http://localhost bzw. http://127.0.0.1 (beliebiger Port) oder https://…
+     — file:// und http:// auf andere Hosts lehnt Spotify ab. Gibt '' zurück,
+     wenn die Adresse nutzbar ist, sonst eine verständliche Erklärung, damit
+     „Anmelden schlägt fehl“ nicht rätselhaft bleibt. Wirft nie. */
+  function redirectHinweis(url) {
+    var s, grund;
+    s = (typeof url === 'string') ? url : '';
+    if (s === '') { return 'Rückleitungsadresse fehlt.'; }
+    grund = '';
+    try {
+      if (s.indexOf('http://localhost') === 0 || s.indexOf('http://127.0.0.1') === 0) {
+        return '';
+      }
+      if (s.indexOf('https://') === 0) {
+        return '';
+      }
+      if (s.indexOf('file:') === 0) {
+        grund = 'Die App läuft als Datei (file://). Spotify kann auf eine file://-Adresse nicht zurückleiten.';
+      } else if (s.indexOf('http://') === 0) {
+        grund = 'Spotify erlaubt http nur auf localhost/127.0.0.1, nicht auf ' + s + '.';
+      } else {
+        grund = 'Diese Adresse ist als Rückleitung nicht nutzbar: ' + s;
+      }
+    } catch (fehler) {
+      grund = 'Rückleitungsadresse nicht lesbar.';
+    }
+    return grund + ' Öffne die App über http://localhost (oder https://) und trage die Adresse'
+      + ' im Spotify-Entwicklerbereich unter „Redirect URIs“ zeichengenau ein.';
+  }
+
+  /* detailFehler: Vorspann + letzte Spotify-Fehlermeldung (falls vorhanden),
+     damit z. B. ein invalid_grant nicht rätselhaft bleibt. Wirft nie. */
+  function detailFehler(vorspann) {
+    var fe, s;
+    s = vorspann;
+    if (Vinzify.Anmeldung && typeof Vinzify.Anmeldung.fehlermeldung === 'function') {
+      try { fe = Vinzify.Anmeldung.fehlermeldung(); } catch (fehler) { fe = ''; }
+      if (fe !== '') { s = s + ' — ' + fe; }
+    }
+    return s;
+  }
+
   function einrichtungZeigen() {
     var adresse, konfig, anmelden, zugangsFeld, zugangsKnopf, pinAbschnitt, pinKnopf, weiter;
+    /* Auch die Einrichtung folgt dem gespeicherten Anstrich. */
+    anstrichAnwenden();
     adresse = '';
     if (Vinzify.Huelle && typeof Vinzify.Huelle.rueckleitungsAdresse === 'function') {
       try { adresse = Vinzify.Huelle.rueckleitungsAdresse(); } catch (fehler) { adresse = ''; }
     }
     befuellen(element('einrichtung-adresse'), adresse);
+    /* Früh warnen, wenn Spotify diese Adresse nicht annehmen kann. */
+    if (adresse !== '') {
+      befuellen(element('einrichtung-adresse-warnung'), redirectHinweis(adresse));
+    }
     konfig = konfigLaden();
     anmelden = element('einrichtung-anmelden');
     if (anmelden) { try { anmelden.addEventListener('click', anmeldungStarten); } catch (fehler) { } }
@@ -9322,6 +9519,12 @@ function verwaltungAnsichtSystem(inhalt, rueckruf) {
       befuellen(hinweis, 'Rückleitungsadresse nicht verfügbar.');
       return;
     }
+    /* Vorab-Prüfung (16): Spotify nimmt file:// oder LAN-http nicht an —
+       lieber jetzt verständlich erklären als auf der Spotify-Seite scheitern. */
+    if (redirectHinweis(grundUrl) !== '') {
+      befuellen(hinweis, 'Anmeldung nicht möglich — ' + redirectHinweis(grundUrl));
+      return;
+    }
     pruefwert = Vinzify.Anmeldung.pruefwert();
     zustand = Vinzify.Anmeldung.zustand();
     anmeldungMerkerSpeichern({ pruefwert: pruefwert, zustand: zustand });
@@ -9387,7 +9590,7 @@ function verwaltungAnsichtSystem(inhalt, rueckruf) {
       daten = await Vinzify.Anmeldung.tauscheCode(grundUrl, clientId, gemerkt.pruefwert, code);
     } catch (fehler) { daten = null; }
     if (daten === null || typeof daten.access_token !== 'string' || daten.access_token === '') {
-      befuellen(hinweis, 'Tokentausch fehlgeschlagen.');
+      befuellen(hinweis, detailFehler('Tokentausch fehlgeschlagen'));
       try { Vinzify.Anmeldung.urlBereinigen(); } catch (fehler) { }
       anmeldungMerkerLoeschen();
       einrichtungZeigen();
