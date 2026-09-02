@@ -1,6 +1,6 @@
 <!--
   Vinzify - ausgelieferte Anwendung (eine selbstenthaltene Datei).
-  Erzeugt von entwuerfe/bau/_build.py am 2026-09-02 08:44:04.
+  Erzeugt von entwuerfe/bau/_build.py am 2026-09-02 09:12:36.
   Eingebettete Module (feste Reihenfolge):
     - vinzify.konfig.js
     - vinzify.log.js
@@ -573,14 +573,16 @@ body {
 
 /* --- Bühne der Kinderoberfläche (#kind-buehne) --- */
 /* Füllt genau den Bildschirm; gescrollt wird NUR die Ebenen-Fläche innen,
-   damit der Player-Balken unten stehen bleibt (wie Entwurf A). */
+   damit der Player-Balken unten stehen bleibt (Entwurf A5). Der Balken
+   sitzt bündig am unteren Rand — deshalb trägt NICHT die Bühne das
+   Innenmaß, sondern die Ebenen-Fläche. */
 #kind-buehne {
   width: 100%;
   max-width: 1280px;
   height: 100vh;
   overflow: hidden;
   margin: 0 auto;
-  padding: 18px;
+  padding: 0;
   background: var(--grund, #0d0f12);
   color: var(--text, #e8ecf1);
 }
@@ -589,7 +591,7 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0;
 }
 
 .kind-ebene {
@@ -598,13 +600,17 @@ body {
   flex: 1 1 auto;
   overflow-y: auto;
   overscroll-behavior: contain;
+  padding: 20px 32px 44px;
 }
 
-/* Kachel-Raster: feste Werte, KEINE CSS-Variable (E18). */
+/* Kachel-Raster: feste Werte, KEINE CSS-Variable (E18). Spaltenabstand
+   größer als der Zeilenabstand, damit Name und Karte zusammenbleiben. */
 .kachel-raster {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  column-gap: 34px;
+  row-gap: 26px;
+  align-content: start;
 }
 
 /* Dichte (84): feste Spaltenzahl als eigene Klassen (KEINE CSS-Variable
@@ -613,50 +619,89 @@ body {
 .kachel-raster.dichte-5 { grid-template-columns: repeat(5, 1fr); }
 .kachel-raster.dichte-6 { grid-template-columns: repeat(6, 1fr); }
 
-/* --- Bereichsmarkierung (E3, E9: kräftiges Farbband statt Symbolschrift) --- */
+/* --- Bereichsmarkierung (E3/E9: Art durch FORM, nicht durch Farbe) ---------
+   Entwurf A5: graue Formmarke (rund = Musik, eckig = Geschichte), daneben
+   der Name in normaler Schreibung und dahinter eine durchlaufende Linie.
+   Grau, damit sich Art und Zustand nie mischen (E6) — die Zustandsfarben
+   --lauf/--hoer/--merk bleiben allein den Zuständen vorbehalten.
+   KEINE Symbolschrift: beide Formen sind gezeichnet (E9). */
 .kind-bereich {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 4px 0 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--linie, #39434f);
+  gap: 16px;
+  height: 64px;
+  margin: 0 0 6px;
 }
 
-.kind-bereich-band {
-  width: 14px;
+/* Jeder Bereichskopf ab dem zweiten bekommt Luft nach oben. */
+.kind-bereich.abstand {
+  margin-top: 22px;
+}
+
+.kind-bereich-form {
+  width: 34px;
   height: 34px;
-  border-radius: 7px;
   flex: 0 0 auto;
+  border-radius: 8px;
+  background: var(--form, #c3ccd8);
+}
+
+/* Musik ist rund und trägt das Loch der Schallplatte. */
+.kind-bereich-form.musik {
+  position: relative;
+  border-radius: 50%;
+}
+
+.kind-bereich-form.musik::after {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 13px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--grund, #0d0f12);
 }
 
 .kind-bereich-text {
-  font-size: 17px;
+  flex: 0 0 auto;
+  font-size: 24px;
   font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--haupt, #f0f3f7);
+  letter-spacing: -.01em;
+  color: var(--text2, #dfe6ef);
+}
+
+.kind-bereich-linie {
+  flex: 1 1 auto;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--linie, #39434f);
 }
 
 /* --- Kopfzeile mit Zurück-Knopf (91/93) --- */
+/* Entwurf A5: großer Zurück-Knopf als gezeichneter Pfeil (E9), daneben das
+   Cover der geöffneten Sammlung/Geschichte und Titel mit Unterzeile.
+   Trefferfläche 76 px ≈ 11 mm. */
 .kind-kopf {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 16px;
+  gap: 20px;
+  padding: 6px 0 22px;
 }
 
 .kind-zurueck {
-  min-height: 64px;
-  padding: 0 28px;
-  border: 2px solid var(--linie, #39434f);
-  border-radius: 14px;
+  width: 76px;
+  height: 76px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 24px;
   background: var(--btn, #232a34);
-  color: var(--haupt, #f0f3f7);
-  font-size: 19px;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 
@@ -665,73 +710,122 @@ body {
   background: var(--streifen, #1c2129);
 }
 
-.kind-kopf-titel {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text2, #dfe6ef);
+/* Zurück-Pfeil aus CSS-Kanten (KEINE Symbolschrift, E9). */
+.kind-zurueck-pfeil {
+  display: flex;
+  align-items: center;
 }
 
-/* --- Kacheln: Auswahl-Bildfläche ≥ 100px (239/240), Kachel ≥ 100px --- */
-.kind-kachel {
-  min-height: 100px;
+.kind-zurueck-pfeil i {
+  width: 0;
+  height: 0;
+  border-right: 20px solid var(--haupt, #f0f3f7);
+  border-top: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+}
+
+.kind-zurueck-pfeil b {
+  display: block;
+  width: 22px;
+  height: 6px;
+  margin-left: -2px;
+  border-radius: 3px;
+  background: var(--haupt, #f0f3f7);
+}
+
+.kind-kopf-cover {
+  width: 96px;
+  height: 96px;
+  flex: 0 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 10px;
-  border: 2px solid var(--linie, #39434f);
-  border-radius: 14px;
-  background: var(--karte, #171b22);
+  align-items: center;
+  justify-content: center;
+}
+
+/* Musik bleibt auch in der Kopfzeile rund (E9). */
+.kind-kopf-cover.rund {
+  border-radius: 50%;
+}
+
+.kind-kopf-text {
+  min-width: 0;
+}
+
+.kind-kopf-titel {
+  display: block;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text2, #dfe6ef);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kind-kopf-unter {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--sub, #8b95a3);
+}
+
+/* --- Kacheln (Entwurf A5) -------------------------------------------------
+   Aufbau je Kachel: eine randlose KARTE (quadratisches Cover + Kapitel-
+   Streifen) und DARUNTER, außerhalb der Karte, der Name. Der Rahmen um
+   alles ist weg — die Karte trägt sich selbst über Radius und Schatten.
+   Musik ist eine runde Scheibe, Geschichte ein Quadrat (E9).
+   Auswahlfläche ≥ 100 px (239/240) ist über die Spaltenbreite gesichert. */
+.kind-kachel {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--text, #e8ecf1);
   font-family: inherit;
   text-align: left;
   cursor: pointer;
 }
 
-.kind-kachel:hover,
 .kind-kachel:focus {
-  border-color: var(--form, #c3ccd8);
+  outline: 3px solid var(--form, #c3ccd8);
+  outline-offset: 4px;
+}
+
+/* Stapel-Hülle: umschließt NUR die Karte (und bei Sammlungen die Ebenen
+   dahinter). Dadurch messen sich die Ebenen an der Karte und laufen nicht
+   über den Namen darunter. */
+.kind-stapel {
+  position: relative;
+  display: block;
+}
+
+/* Die Karte: Cover und Streifen in EINER Fläche, 16 px Radius, kein Rand. */
+.kind-karte {
+  position: relative;
+  display: block;
+  z-index: 2;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--karte, #171b22);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .28);
+}
+
+.kind-kachel:hover .kind-karte {
   background: var(--streifen, #1c2129);
 }
 
-/* Runde Kachel (E9: Musik ist rund, Geschichte eckig) — Musik-Einträge der
-   obersten Ebene als Kreise mit Namen darunter, OHNE Karten-Rahmen. */
-.kind-kachel.rund {
-  align-items: center;
-  text-align: center;
-  border: none;
-  background: transparent;
-  padding: 4px 4px 2px;
-}
-
-.kind-kachel.rund:hover,
-.kind-kachel.rund:focus {
-  border-color: transparent;
-  background: transparent;
-}
-
-.kind-kachel.rund:focus {
-  outline: 2px solid var(--form, #c3ccd8);
-  outline-offset: 2px;
-}
-
-.kind-kachel.rund .kind-kachel-bild {
-  width: 100%;
-  max-width: 150px;
-  height: auto;
-  aspect-ratio: 1 / 1;
-  border-radius: 50%;
-}
-
-.kind-kachel.rund .kind-kachel-name {
-  color: var(--text2, #dfe6ef);
-}
-
+/* Cover: IMMER quadratisch (A5) — nie mehr das breite Rechteck. */
 .kind-kachel-bild {
-  height: 108px;
-  border-radius: 10px;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .kind-kachel-ziffer {
@@ -746,80 +840,286 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 10px;
   display: block;
 }
 
-/* Vorschau des eigenen Bildes in der Verwaltung (47/48). */
-.verw-bild-vorschau img {
-  width: 44px;
-  height: 44px;
-  object-fit: cover;
-  border-radius: 6px;
-  display: block;
+/* Kapitel-Streifen unter dem Cover: gezeichnete Listen-Marke (E9) und die
+   Anzahl. Sagt vor dem Antippen, wie viel hinter der Kachel liegt. */
+.kind-streifen {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  background: var(--streifen, #1c2129);
 }
 
+.kind-streifen-marke {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 0 0 auto;
+}
+
+.kind-streifen-marke i {
+  display: block;
+  width: 26px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--sub, #8b95a3);
+}
+
+.kind-streifen-text {
+  font-size: 13px;
+  color: var(--sub, #8b95a3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Der Name steht UNTER der Karte, einzeilig. So bleibt die Reihe der Cover
+   auf einer Linie, auch wenn die Namen verschieden lang sind. */
 .kind-kachel-name {
-  font-size: 15px;
-  line-height: 1.3;
-  min-height: 2.6em;
-  color: var(--text2, #dfe6ef);
+  position: relative;
+  z-index: 3;
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--sub, #8b95a3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+/* Musik: runde Scheibe, rund ein Viertel kleiner als ein Geschichten-Cover
+   und in ihrer Spalte zentriert. Die Spaltenbreite bleibt gleich, damit die
+   Ordnung des Rasters hält. Kein Streifen, kein Schatten (E9/E6). */
+.kind-kachel.rund {
+  text-align: center;
+}
+
+.kind-kachel.rund .kind-karte {
+  width: 75%;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: none;
+}
+
+.kind-kachel.rund:hover .kind-karte {
+  background: transparent;
+}
+
+.kind-kachel.rund .kind-kachel-bild {
+  border-radius: 50%;
+}
+
+/* --- Zustand 1 von 3: LÄUFT GERADE (E4: Ring UND Abzeichen) --- */
+.kind-karte.laeuft {
+  box-shadow: 0 0 0 6px var(--lauf, #ffb02e), 0 10px 26px var(--glow, rgba(255, 176, 46, .22));
+}
+
+.kind-eq {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  height: 34px;
+  padding: 0 11px 9px;
+  border-radius: 17px;
+  background: var(--lauf, #ffb02e);
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  z-index: 3;
+}
+
+.kind-eq i {
+  display: block;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--eqdark, #231a08);
+  animation: kind-eq-schlag .9s ease-in-out infinite alternate;
+}
+
+.kind-eq i:nth-child(1) { height: 9px; }
+.kind-eq i:nth-child(2) { height: 17px; animation-delay: .18s; }
+.kind-eq i:nth-child(3) { height: 12px; animation-delay: .36s; }
+
+@keyframes kind-eq-schlag {
+  from { transform: scaleY(.4); }
+  to   { transform: scaleY(1); }
+}
+
+/* Das Abzeichen ist die EINZIGE Bewegung der Kinderoberfläche; wer sie
+   abbestellt hat, bekommt den Ring allein (er trägt die Bedeutung schon). */
+@media (prefers-reduced-motion: reduce) {
+  .kind-eq i { animation: none; }
+}
+
+/* --- Zustand 2 von 3: HÖRSTAND (157) --- */
+/* Streifen an der Unterkante des Covers. Voll heißt durchgehört.
+   Nur bei Geschichten, nie bei Musik. */
+.kind-hoerstand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 10px;
+  background: rgba(255, 255, 255, .14);
+  z-index: 3;
+}
+
+.kind-hoerstand span {
+  display: block;
+  height: 100%;
+  background: var(--hoer, #35c08a);
+}
+
+/* --- Sammlung: zwei versetzte Ebenen HINTER der Karte --- */
+/* Sagt ohne Wort und ohne Farbe, dass hinter der Kachel mehrere Alben
+   liegen — dieselbe Form, nur gestapelt. */
+.kind-lage {
+  position: absolute;
+  left: 9px;
+  top: 9px;
+  right: -9px;
+  height: 100%;
+  border-radius: 16px;
+  background: var(--btn, #232a34);
+  z-index: 1;
+}
+
+.kind-lage.hinten {
+  left: 18px;
+  top: 18px;
+  right: -18px;
+  background: var(--karte, #171b22);
+  z-index: 0;
+}
+
+/* --- Herz „gemerkt" (E9: gezeichnet, keine Symbolschrift) ------------------
+   Außenform aus zwei gedrehten Halbrundungen, die Aussparung ist eine
+   kleinere Kopie in der Tastenfarbe. Gefüllt = gemerkt, Umriss = nicht
+   gemerkt, stumpf = auf dieser Ebene ohne Funktion (statt E8). */
+.kind-herz {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 25px;
+  flex: 0 0 auto;
+}
+
+.kind-herz::before,
+.kind-herz::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 14px;
+  height: 22px;
+  border-radius: 14px 14px 0 0;
+  background: var(--merk, #ff4d6d);
+}
+
+.kind-herz::before { left: 14px; transform: rotate(-45deg); transform-origin: 0 100%; }
+.kind-herz::after  { left: 0;    transform: rotate(45deg);  transform-origin: 100% 100%; }
+
+.kind-herz i {
+  position: absolute;
+  left: 5px;
+  top: 5px;
+  width: 18px;
+  height: 16px;
+  display: none;
+}
+
+.kind-herz i::before,
+.kind-herz i::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 9px;
+  height: 14px;
+  border-radius: 9px 9px 0 0;
+  background: var(--btn, #232a34);
+}
+
+.kind-herz i::before { left: 9px; transform: rotate(-45deg); transform-origin: 0 100%; }
+.kind-herz i::after  { left: 0;   transform: rotate(45deg);  transform-origin: 100% 100%; }
+
+/* Nicht gemerkt: dasselbe Herz als Umriss. */
+.kind-herz.aus i { display: block; }
+.kind-herz.aus::before,
+.kind-herz.aus::after { background: var(--sub, #8b95a3); }
+
+/* Ohne Funktion auf dieser Ebene: sichtbar stumpf, damit keine Taste
+   aussieht wie immer und nichts tut (E8). */
+.kind-herz.tot i { display: block; }
+.kind-herz.tot::before,
+.kind-herz.tot::after { background: var(--linie, #39434f); }
 
 /* --- Listenzeilen (Kapitel/Titel) --- */
+/* Entwurf A5: hohe, randlose Flächen. Die Nummer trägt die Zeile, der Name
+   steht daneben, die Dauer rechts. Leserichtung oben→unten (83). */
 .kind-zeile {
   grid-column: 1 / -1;
   width: 100%;
-  min-height: 56px;
+  min-height: 76px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 10px 14px;
-  margin-bottom: 8px;
-  border: 1px solid var(--linie, #39434f);
-  border-radius: 10px;
+  gap: 22px;
+  padding: 0 22px;
+  margin-bottom: 12px;
+  border: 0;
+  border-radius: 18px;
   background: var(--karte, #171b22);
   color: var(--text, #e8ecf1);
   font-family: inherit;
-  font-size: 16px;
+  font-size: 17px;
   text-align: left;
   cursor: pointer;
 }
 
 .kind-zeile:hover,
 .kind-zeile:focus {
-  border-color: var(--form, #c3ccd8);
   background: var(--streifen, #1c2129);
 }
 
-/* Kapitel-Zeilen (90/83): große Nummer, hohe Fläche, Leserichtung oben→unten. */
+/* Kapitel-Zeilen (90/83): große Nummer, hohe Fläche ≈ 14 mm. */
 .kind-zeile-gross {
-  min-height: 72px;
-  font-size: 18px;
-  padding: 12px 16px;
+  min-height: 96px;
+  font-size: 21px;
 }
 
 .kind-zeile-gross .kind-zeile-nummer {
-  font-size: 30px;
+  font-size: 52px;
 }
 
 .kind-zeile-nummer {
-  width: 52px;
+  width: 78px;
   flex: 0 0 auto;
-  font-size: 24px;
+  font-size: 34px;
   font-weight: 700;
-  text-align: center;
-  color: var(--sub, #8b95a3);
+  line-height: 1;
+  text-align: right;
+  color: var(--text2, #dfe6ef);
+  font-variant-numeric: tabular-nums;
 }
 
 .kind-zeile-name {
   flex: 1 1 auto;
+  min-width: 0;
   color: var(--text2, #dfe6ef);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .kind-zeile-dauer {
+  width: 78px;
   flex: 0 0 auto;
-  font-size: 14px;
+  font-size: 17px;
+  text-align: right;
   color: var(--sub, #8b95a3);
   font-variant-numeric: tabular-nums;
 }
@@ -829,47 +1129,45 @@ body {
   grid-column: 1 / -1;
   display: flex;
   align-items: stretch;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .kind-titel-haupt {
   flex: 1 1 auto;
-  min-height: 68px;
+  min-width: 0;
+  min-height: 76px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 10px 14px;
-  border: 1px solid var(--linie, #39434f);
-  border-radius: 10px;
+  gap: 22px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 18px;
   background: var(--karte, #171b22);
   color: var(--text, #e8ecf1);
   font-family: inherit;
-  font-size: 16px;
+  font-size: 17px;
   text-align: left;
   cursor: pointer;
 }
 
 .kind-titel-haupt:hover,
 .kind-titel-haupt:focus {
-  border-color: var(--form, #c3ccd8);
   background: var(--streifen, #1c2129);
 }
 
-/* Merken-Taste: große Trefferfläche (≥ 44px), Rand in --merk (E6: die
-   Taste BEDEUTET „gemerkt"). Merk-Logik in M6. */
+/* Merken-Taste: gezeichnetes Herz (E9) statt Wort. Trefferfläche 76 px
+   ≈ 11 mm. Gefüllt heißt gemerkt, Umriss heißt nicht gemerkt (E6). */
 .kind-merken {
+  width: 76px;
   flex: 0 0 auto;
-  min-width: 76px;
-  min-height: 68px;
-  padding: 0 16px;
-  border: 2px solid var(--merk, #ff4d6d);
-  border-radius: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
   background: var(--btn, #232a34);
-  color: var(--haupt, #f0f3f7);
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 
@@ -879,34 +1177,35 @@ body {
 }
 
 /* --- Player-Balken (von jeder Ebene sichtbar; 123 — REINE Anzeige) --- */
-/* Leer (es spielt nichts) → ganz ausblenden, damit keine leere Fläche
-   stehen bleibt. */
+/* Entwurf A5: der Balken klebt bündig am unteren Rand, ohne Radius und
+   ohne Rand, nur durch eine Linie vom Inhalt getrennt. 116 px hoch.
+   Leer (es spielt nichts) → ganz ausblenden. */
 .kind-player-balken:empty {
   display: none;
 }
 
-/* Letztes Element der Bühnen-Spalte: bleibt unten stehen, während die
-   Ebenen-Fläche darüber scrollt (wie Entwurf A: Player am unteren Rand). */
 .kind-player-balken {
   flex: 0 0 auto;
   width: 100%;
-  min-height: 96px;
-  padding: 12px;
-  border: 1px solid var(--linie, #39434f);
-  border-radius: 12px;
-  background: var(--pause, #0f141a);
+  height: 116px;
+  padding: 0 24px;
+  border: 0;
+  border-top: 1px solid var(--streifen, #1c2129);
+  border-radius: 0;
+  background: var(--bar, #12161c);
 }
 
 .kind-player {
+  height: 100%;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
 .kind-player-cover {
-  width: 76px;
-  height: 76px;
-  border-radius: 10px;
+  width: 88px;
+  height: 88px;
+  border-radius: 14px;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -935,11 +1234,10 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 
 .kind-player-name {
-  font-size: 18px;
+  font-size: 21px;
   font-weight: 600;
   color: var(--text2, #dfe6ef);
   white-space: nowrap;
@@ -947,18 +1245,23 @@ body {
   text-overflow: ellipsis;
 }
 
-.kind-player-zeit {
-  font-size: 13px;
+/* Unterzeile: sagt, WO im Ganzen man ist (Kapitel 5 von 12). */
+.kind-player-unter {
+  font-size: 14px;
   color: var(--sub, #8b95a3);
-  font-variant-numeric: tabular-nums;
+  margin: 2px 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Fortschritt als REINE Anzeige (123): keine Tipp-Fläche, zählt nie
-   selbst weiter. Füllung in --lauf = „läuft gerade" (E6, eine Bedeutung). */
+   selbst weiter. Hell gefüllt — die Zustandsfarben bleiben den drei
+   Zuständen vorbehalten (E6). */
 .kind-player-fortschritt {
   width: 100%;
-  height: 10px;
-  border-radius: 5px;
+  height: 8px;
+  border-radius: 4px;
   background: var(--streifen, #1c2129);
   overflow: hidden;
 }
@@ -966,22 +1269,43 @@ body {
 .kind-player-fuellung {
   display: block;
   height: 100%;
-  border-radius: 5px;
-  background: var(--lauf, #ffb02e);
+  border-radius: 4px;
+  background: var(--text2, #dfe6ef);
+}
+
+/* Zeit: gelaufen oben, gesamt darunter — rechtsbündig, feste Ziffernbreite,
+   damit beim Weiterzählen nichts springt. */
+.kind-player-zeit {
+  flex: 0 0 auto;
+  margin-right: 6px;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: right;
+  color: var(--text2, #dfe6ef);
+  font-variant-numeric: tabular-nums;
+}
+
+.kind-player-zeit em {
+  display: block;
+  font-style: normal;
+  color: var(--sub, #8b95a3);
 }
 
 .kind-player-tasten {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
+/* Nebenaktion 66 px ≈ 9 mm. */
 .kind-player-taste {
-  width: 72px;
-  height: 72px;
-  border: 2px solid var(--linie, #39434f);
-  border-radius: 50%;
+  width: 66px;
+  height: 66px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 33px;
   background: var(--btn, #232a34);
   display: flex;
   align-items: center;
@@ -994,45 +1318,66 @@ body {
   background: var(--streifen, #1c2129);
 }
 
+/* Hauptaktion 86 px ≈ 12 mm, hell — die einzige helle Fläche im Balken. */
+.kind-player-taste.haupt {
+  width: 86px;
+  height: 86px;
+  border-radius: 43px;
+  background: var(--haupt, #f0f3f7);
+}
+
+.kind-player-taste.haupt:hover,
+.kind-player-taste.haupt:focus {
+  background: var(--text2, #dfe6ef);
+}
+
 /* Start-Dreieck aus CSS-Kanten gebaut (KEINE Symbolschrift, E9). */
 .kind-player-dreieck {
   width: 0;
   height: 0;
   margin-left: 6px;
-  border-left: 26px solid var(--haupt, #f0f3f7);
+  border-left: 26px solid var(--pause, #0f141a);
   border-top: 17px solid transparent;
   border-bottom: 17px solid transparent;
 }
 
-/* Pause-Symbol: zwei senkrechte Balken aus CSS-Kanten (E9). */
+/* Pause-Symbol: zwei senkrechte Balken (E9). */
 .kind-player-pause-a,
 .kind-player-pause-b {
-  width: 10px;
-  height: 30px;
+  width: 9px;
+  height: 34px;
   border-radius: 3px;
-  background: var(--haupt, #f0f3f7);
+  background: var(--pause, #0f141a);
 }
 
 .kind-player-pause-a {
-  margin-right: 5px;
+  margin-right: 9px;
 }
 
-/* Vor-/Zurück-Pfeile aus CSS-Kanten (E9). */
-.kind-player-pfeil {
-  display: block;
+/* Vor-/Zurück: Dreieck plus Anschlagbalken, wie am Kassettengerät (E9). */
+.kind-player-sprung {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.kind-player-sprung i {
   width: 0;
   height: 0;
-  border-top: 15px solid transparent;
-  border-bottom: 15px solid transparent;
+  border-top: 12px solid transparent;
+  border-bottom: 12px solid transparent;
 }
 
-.kind-player-pfeil-l {
-  border-right: 24px solid var(--haupt, #f0f3f7);
+.kind-player-sprung b {
+  display: block;
+  width: 5px;
+  height: 24px;
+  border-radius: 2px;
+  background: var(--haupt, #f0f3f7);
 }
 
-.kind-player-pfeil-r {
-  border-left: 24px solid var(--haupt, #f0f3f7);
-}
+.kind-player-sprung.zurueck i { border-right: 16px solid var(--haupt, #f0f3f7); }
+.kind-player-sprung.vor i     { border-left: 16px solid var(--haupt, #f0f3f7); }
 
 /* --- Fehlerzustand (221–226) in der Ebenen-Fläche --- */
 /* Die Klassen .fehler-symbol/-text/-knopf kommen weiter oben; hier nur die
@@ -4976,8 +5321,11 @@ var KIND_PLATZHALTER_FARBEN = [
   '#2f4a1f', '#1f2f5a', '#5a1f30', '#3a4a1f', '#1f4a4a'
 ];
 
-var KIND_BAND_GESCHICHTEN = '#3f6fb0';
-var KIND_BAND_MUSIK = '#8a4fa3';
+/* Kennung des gerade laufenden Einstiegspunkts (M8.2). Die Hülle setzt
+   sie, die Kacheln lesen sie für den Zustand "läuft gerade" (E4).
+   Bereichsfarben gibt es NICHT mehr: die Art trägt eine graue Form,
+   damit Farbe allein den drei Zuständen gehört (E6). */
+Vinzify.Kind.LAUFEND = null;
 
 /* platzhalterFarbe: deterministische Farbe aus der Palette, abgeleitet aus
    der Zeichenkette id (Summe der Zeichencodes modulo Palettenlänge).
@@ -5044,49 +5392,145 @@ function kindText(wert) {
   return (wert === undefined || wert === null) ? '' : String(wert);
 }
 
-/* kindBereichKopf: Überschrift eines Bereichs mit deutlichem Farbband
-   (E3/E9 — Farbband statt Symbolschrift; E6 — eigene Bereichsfarben). */
-function kindBereichKopf(zielEl, text, farbe) {
-  var kopf, band, label;
+/* kindBereichKopf: Überschrift eines Bereichs (Entwurf A5). Die ART trägt
+   eine graue FORM — rund = Musik, eckig = Geschichte (E9, gezeichnet, keine
+   Symbolschrift) — daneben steht der Name, dahinter läuft eine Linie bis
+   zum Rand. Grau, weil --lauf/--hoer/--merk allein den Zuständen gehören
+   (E6). abstand === true setzt Luft nach oben (zweiter Kopf und weitere). */
+function kindBereichKopf(zielEl, text, art, abstand) {
+  var kopf, form, label, linie, klasse;
   try {
-    kopf = kindElement('div', 'kind-bereich');
-    band = kindElement('span', 'kind-bereich-band');
-    band.style.backgroundColor = farbe;
+    klasse = 'kind-bereich' + (abstand === true ? ' abstand' : '');
+    kopf = kindElement('div', klasse);
+    form = kindElement('span', 'kind-bereich-form' + (art === 'musik' ? ' musik' : ''));
+    form.setAttribute('aria-hidden', 'true');
     label = kindElement('span', 'kind-bereich-text');
     label.textContent = text;
-    kopf.appendChild(band);
+    linie = kindElement('span', 'kind-bereich-linie');
+    linie.setAttribute('aria-hidden', 'true');
+    kopf.appendChild(form);
     kopf.appendChild(label);
+    kopf.appendChild(linie);
     zielEl.appendChild(kopf);
   } catch (fehler) { }
 }
 
-/* kindZurueckKopf: Kopfzeile mit großem, deutlich sichtbarem Zurück-Knopf
-   (91/93) und Titel. Klick → rueckruf(null, 'zurueck'). */
-function kindZurueckKopf(zielEl, titel, rueckruf) {
-  var kopf, knopf, titelEl;
+/* kindHerz: gezeichnetes Herz (E9). zustand: 'an' = gemerkt (gefüllt),
+   'aus' = nicht gemerkt (Umriss), 'tot' = auf dieser Ebene ohne Funktion
+   (sichtbar stumpf statt einer Taste, die nichts tut, E8). */
+function kindHerz(zustand) {
+  var herz, loch;
+  herz = kindElement('span', 'kind-herz' + (zustand === 'an' ? '' : ' ' + zustand));
+  loch = kindElement('i', '');
+  herz.appendChild(loch);
+  return herz;
+}
+
+/* kindZurueckKopf: Kopfzeile mit großem Zurück-Knopf (91/93), dem Cover der
+   geöffneten Ebene und Titel samt Unterzeile. Der Knopf trägt einen
+   gezeichneten Pfeil (E9) und die Beschriftung als aria-label.
+   Klick → rueckruf(null, 'zurueck'). unter/eintrag/rund sind optional. */
+function kindZurueckKopf(zielEl, titel, rueckruf, unter, eintrag, rund) {
+  var kopf, knopf, pfeil, cover, text, titelEl, unterEl;
   try {
     kopf = kindElement('div', 'kind-kopf');
     knopf = kindElement('button', 'kind-zurueck');
     knopf.setAttribute('type', 'button');
-    knopf.textContent = 'Zurück';
+    knopf.setAttribute('aria-label', 'Zurück');
+    pfeil = kindElement('span', 'kind-zurueck-pfeil');
+    pfeil.appendChild(kindElement('i', ''));
+    pfeil.appendChild(kindElement('b', ''));
+    knopf.appendChild(pfeil);
     kindKlick(knopf, null, 'zurueck', rueckruf);
+    kopf.appendChild(knopf);
+
+    if (eintrag) {
+      cover = kindElement('span', 'kind-kopf-cover' + (rund === true ? ' rund' : ''));
+      Vinzify.Kind.coverZeichnen(cover, eintrag);
+      kopf.appendChild(cover);
+    }
+
+    text = kindElement('span', 'kind-kopf-text');
     titelEl = kindElement('span', 'kind-kopf-titel');
     titelEl.textContent = kindText(titel);
-    kopf.appendChild(knopf);
-    kopf.appendChild(titelEl);
+    text.appendChild(titelEl);
+    if (typeof unter === 'string' && unter !== '') {
+      unterEl = kindElement('span', 'kind-kopf-unter');
+      unterEl.textContent = unter;
+      text.appendChild(unterEl);
+    }
+    kopf.appendChild(text);
     zielEl.appendChild(kopf);
   } catch (fehler) { }
 }
 
-/* kindKachel: Kachel mit Platzhalterfläche (deterministische Farbe), großer
-   Ziffer und Name für den Vater. Klick → rueckruf(id, art). Optional bild
-   (M8.7, 47) als Daten-/Webadresse; optional rund === true (E9: Musik ist
-   rund, Geschichte eckig) schaltet die Kachel auf die runde Form. */
-function kindKachel(zielEl, id, art, name, nummer, rueckruf, bild, rund) {
-  var kachel, flaeche, ziffer, nameEl, bildEl;
+/* kindAnzahlText: "12 Kapitel" / "1 Kapitel" / "9 Folgen". Wirft nie. */
+function kindAnzahlText(anzahl, einheit) {
+  var wort;
+  if (typeof anzahl !== 'number' || anzahl <= 0) { return ''; }
+  wort = (einheit === 'folgen')
+    ? (anzahl === 1 ? 'Folge' : 'Folgen')
+    : 'Kapitel';
+  return '' + anzahl + ' ' + wort;
+}
+
+/* kindHoerstandAnteil: Anteil 0..100 des Hörstands eines Einstiegspunkts
+   (157). Liest über Vinzify.Daten; fehlt die Schicht oder gibt es keinen
+   Stand, ist das Ergebnis -1 (= kein Streifen). Wirft nie. */
+function kindHoerstandAnteil(eintrag) {
+  var stand, gesamt, i;
   try {
+    if (!eintrag || !Vinzify.Daten ||
+        typeof Vinzify.Daten.hoerstandAbfragen !== 'function') { return -1; }
+    stand = Vinzify.Daten.hoerstandAbfragen(eintrag.id);
+    if (!stand) { return -1; }
+    if (stand.durchgehoert === true) { return 100; }
+    gesamt = 0;
+    if (eintrag.kapitel && eintrag.kapitel.length) {
+      for (i = 0; i < eintrag.kapitel.length; i = i + 1) {
+        if (eintrag.kapitel[i] && typeof eintrag.kapitel[i].dauer === 'number') {
+          gesamt = gesamt + eintrag.kapitel[i].dauer;
+        }
+      }
+    } else if (typeof eintrag.dauer === 'number') {
+      gesamt = eintrag.dauer;
+    }
+    if (gesamt <= 0) { return -1; }
+    return Math.max(0, Math.min(100, stand.positionMs * 100 / gesamt));
+  } catch (fehler) {
+    return -1;
+  }
+}
+
+/* kindKachel: Kachel nach Entwurf A5 — eine randlose KARTE aus quadratischem
+   Cover und Kapitel-Streifen, DARUNTER der Name. Klick → rueckruf(id, art).
+   bild (M8.7, 47) optional als Daten-/Webadresse; rund === true schaltet auf
+   die runde Musik-Scheibe ohne Streifen (E9).
+   zusatz (optional) traegt die Zustaende und die Anzahl:
+     { anzahl, einheit, lagen, hoerstand, laeuft }
+   - anzahl/einheit   -> Kapitel-Streifen ("12 Kapitel", "9 Folgen")
+   - lagen === true   -> zwei versetzte Ebenen hinter der Karte (Sammlung)
+   - hoerstand 0..100 -> Streifen an der Unterkante (157); < 0 = keiner
+   - laeuft === true  -> Ring UND Abzeichen (E4: zwei Kanaele, nicht Farbe allein)
+   Wirft nie. */
+function kindKachel(zielEl, id, art, name, nummer, rueckruf, bild, rund, zusatz) {
+  var kachel, stapel, karte, flaeche, ziffer, nameEl, bildEl, streifen, marke,
+      text, eq, k, hs, fuellung, anzahlText, z;
+  try {
+    z = (zusatz && typeof zusatz === 'object') ? zusatz : {};
     kachel = kindElement('button', 'kind-kachel' + (rund === true ? ' rund' : ''));
     kachel.setAttribute('type', 'button');
+
+    /* Stapel: umschließt die Karte. Bei Sammlungen liegen zwei versetzte
+       Ebenen dahinter — sie messen sich an der Karte, nicht an der ganzen
+       Kachel, damit sie den Namen darunter nicht verdecken. */
+    stapel = kindElement('span', 'kind-stapel');
+    if (z.lagen === true) {
+      stapel.appendChild(kindElement('span', 'kind-lage hinten'));
+      stapel.appendChild(kindElement('span', 'kind-lage'));
+    }
+
+    karte = kindElement('span', 'kind-karte' + (z.laeuft === true ? ' laeuft' : ''));
     flaeche = kindElement('span', 'kind-kachel-bild');
     if (typeof bild === 'string' && bild !== '') {
       flaeche.style.backgroundColor = '';
@@ -5101,9 +5545,45 @@ function kindKachel(zielEl, id, art, name, nummer, rueckruf, bild, rund) {
       ziffer.textContent = '' + nummer;
       flaeche.appendChild(ziffer);
     }
+
+    /* Laeuft gerade: Abzeichen mit Balken, dazu der Ring auf der Karte (E4). */
+    if (z.laeuft === true) {
+      eq = kindElement('span', 'kind-eq');
+      eq.setAttribute('aria-hidden', 'true');
+      for (k = 0; k < 3; k = k + 1) { eq.appendChild(kindElement('i', '')); }
+      flaeche.appendChild(eq);
+    }
+
+    /* Hoerstand: Streifen an der Unterkante, nur bei Geschichten (157). */
+    if (rund !== true && typeof z.hoerstand === 'number' && z.hoerstand >= 0) {
+      hs = kindElement('span', 'kind-hoerstand');
+      hs.setAttribute('aria-hidden', 'true');
+      fuellung = kindElement('span', '');
+      fuellung.style.width = '' + z.hoerstand + '%';
+      hs.appendChild(fuellung);
+      flaeche.appendChild(hs);
+    }
+
+    karte.appendChild(flaeche);
+
+    /* Kapitel-Streifen: sagt vor dem Antippen, wie viel dahinter liegt. */
+    anzahlText = kindAnzahlText(z.anzahl, z.einheit);
+    if (rund !== true && anzahlText !== '') {
+      streifen = kindElement('span', 'kind-streifen');
+      marke = kindElement('span', 'kind-streifen-marke');
+      marke.setAttribute('aria-hidden', 'true');
+      for (k = 0; k < 3; k = k + 1) { marke.appendChild(kindElement('i', '')); }
+      text = kindElement('span', 'kind-streifen-text');
+      text.textContent = anzahlText;
+      streifen.appendChild(marke);
+      streifen.appendChild(text);
+      karte.appendChild(streifen);
+    }
+
+    stapel.appendChild(karte);
     nameEl = kindElement('span', 'kind-kachel-name');
     nameEl.textContent = kindText(name);
-    kachel.appendChild(flaeche);
+    kachel.appendChild(stapel);
     kachel.appendChild(nameEl);
     kindKlick(kachel, id, art, rueckruf);
     zielEl.appendChild(kachel);
@@ -5199,7 +5679,7 @@ function kindSammlungBild(stand, sammlung) {
    (nur textContent). Wirft nie. */
 Vinzify.Kind.zeigeTop = function (stand, zielEl, rueckruf) {
   var quellen, einstiegspunkte, sammlungen, i, j, quelle, e, nummerG, nummerM;
-  var hatMusik, hatGeschichten, hatSammlung;
+  var hatMusik, hatGeschichten, hatSammlung, kopfGezeichnet, anzahl, s;
   try {
     kindLeeren(zielEl);
     if (!zielEl) { return; }
@@ -5215,48 +5695,65 @@ Vinzify.Kind.zeigeTop = function (stand, zielEl, rueckruf) {
       if (quelle.bereich === 'musik') { hatMusik = true; }
       else if (quelle.bereich === 'geschichten') { hatGeschichten = true; }
     }
+    kopfGezeichnet = false;
 
     /* Bereich Musik ZUERST (E5-Richtung aus Entwurf A: Musik ohne Scrollen
-       oben; E9: rund = Musik). Je Musik-Quelle EINE runde Kachel. */
+       oben; E9: rund = Musik). Je Musik-Quelle EINE runde Scheibe. Musik
+       trägt keinen Hörstand (157) und keinen Kapitel-Streifen. */
     if (hatMusik) {
-      kindBereichKopf(zielEl, 'Musik', KIND_BAND_MUSIK);
+      kindBereichKopf(zielEl, 'Musik', 'musik', false);
+      kopfGezeichnet = true;
       nummerM = 0;
       for (i = 0; i < quellen.length; i = i + 1) {
         quelle = quellen[i];
         if (!quelle || quelle.bereich !== 'musik') { continue; }
         nummerM = nummerM + 1;
-        kindKachel(zielEl, quelle.id, 'musik', quelle.name, nummerM, rueckruf, null, true);
+        kindKachel(zielEl, quelle.id, 'musik', quelle.name, nummerM, rueckruf, null, true,
+          { laeuft: (Vinzify.Kind.LAUFEND === quelle.id) });
       }
     }
 
-    /* Bereich Geschichten (eckig = Geschichte, E9; mit Farbband, E3/E6):
-       je Quelle mit sammlung===true EINE Kachel (art 'quelle'), sonst je
-       Album der Quelle; danach jede Sammlung (art 'sammlung'). */
+    /* Bereich Geschichten (eckig = Geschichte, E9): je Quelle mit
+       sammlung===true EINE Kachel (art 'quelle'), sonst je Album der Quelle;
+       danach jede Sammlung (art 'sammlung') mit gestapelten Ebenen. */
     if (hatGeschichten || hatSammlung) {
-      kindBereichKopf(zielEl, 'Geschichten', KIND_BAND_GESCHICHTEN);
+      kindBereichKopf(zielEl, 'Geschichten', 'geschichten', kopfGezeichnet);
       nummerG = 0;
       for (i = 0; i < quellen.length; i = i + 1) {
         quelle = quellen[i];
         if (!quelle || quelle.bereich !== 'geschichten') { continue; }
         if (quelle.sammlung === true) {
+          anzahl = 0;
+          for (j = 0; j < einstiegspunkte.length; j = j + 1) {
+            e = einstiegspunkte[j];
+            if (e && e.quelle === quelle.id && e.art === 'album') { anzahl = anzahl + 1; }
+          }
           nummerG = nummerG + 1;
-          kindKachel(zielEl, quelle.id, 'quelle', quelle.name, nummerG, rueckruf);
+          kindKachel(zielEl, quelle.id, 'quelle', quelle.name, nummerG, rueckruf, null, false,
+            { anzahl: anzahl, einheit: 'folgen', lagen: true,
+              laeuft: (Vinzify.Kind.LAUFEND === quelle.id) });
         } else {
           for (j = 0; j < einstiegspunkte.length; j = j + 1) {
             e = einstiegspunkte[j];
             if (e && e.quelle === quelle.id && e.art === 'album') {
               nummerG = nummerG + 1;
-              kindKachel(zielEl, e.id, 'album', e.name, nummerG, rueckruf);
+              kindKachel(zielEl, e.id, 'album', e.name, nummerG, rueckruf, e.bild, false,
+                { anzahl: (e.kapitel ? e.kapitel.length : 0),
+                  hoerstand: kindHoerstandAnteil(e),
+                  laeuft: (Vinzify.Kind.LAUFEND === e.id) });
             }
           }
         }
       }
       for (i = 0; i < sammlungen.length; i = i + 1) {
-        if (sammlungen[i]) {
-          nummerG = nummerG + 1;
-          kindKachel(zielEl, sammlungen[i].id, 'sammlung', sammlungen[i].name, nummerG, rueckruf,
-            kindSammlungBild(stand, sammlungen[i]));
-        }
+        s = sammlungen[i];
+        if (!s) { continue; }
+        nummerG = nummerG + 1;
+        kindKachel(zielEl, s.id, 'sammlung', s.name, nummerG, rueckruf,
+          kindSammlungBild(stand, s), false,
+          { anzahl: (s.einstiegspunkte ? s.einstiegspunkte.length : 0),
+            einheit: 'folgen', lagen: true,
+            laeuft: (Vinzify.Kind.LAUFEND === s.id) });
       }
     }
   } catch (fehler) { }
@@ -5271,7 +5768,9 @@ Vinzify.Kind.zeigeAlbum = function (stand, zielEl, albumId, rueckruf) {
     kindLeeren(zielEl);
     if (!zielEl) { return; }
     album = kindEinstiegFinden(stand, albumId);
-    kindZurueckKopf(zielEl, album ? album.name : 'Geschichte', rueckruf);
+    kindZurueckKopf(zielEl, album ? album.name : 'Geschichte', rueckruf,
+      kindAnzahlText(album && album.kapitel ? album.kapitel.length : 0, 'kapitel'),
+      album, false);
     if (album && album.kapitel) {
       for (i = 0; i < album.kapitel.length; i = i + 1) {
         k = album.kapitel[i];
@@ -5291,7 +5790,10 @@ Vinzify.Kind.zeigeSammlung = function (stand, zielEl, sammlungsId, rueckruf) {
     kindLeeren(zielEl);
     if (!zielEl) { return; }
     sammlung = kindSammlungFinden(stand, sammlungsId);
-    kindZurueckKopf(zielEl, sammlung ? sammlung.name : 'Sammlung', rueckruf);
+    kindZurueckKopf(zielEl, sammlung ? sammlung.name : 'Sammlung', rueckruf,
+      'Sammlung, ' + kindAnzahlText(
+        sammlung && sammlung.einstiegspunkte ? sammlung.einstiegspunkte.length : 0, 'folgen'),
+      { id: sammlungsId, bild: kindSammlungBild(stand, sammlung) }, false);
     if (sammlung && sammlung.einstiegspunkte) {
       nummer = 0;
       for (i = 0; i < sammlung.einstiegspunkte.length; i = i + 1) {
@@ -5299,7 +5801,10 @@ Vinzify.Kind.zeigeSammlung = function (stand, zielEl, sammlungsId, rueckruf) {
         e = kindEinstiegFinden(stand, id);
         if (e) {
           nummer = nummer + 1;
-          kindKachel(zielEl, e.id, 'album', e.name, nummer, rueckruf);
+          kindKachel(zielEl, e.id, 'album', e.name, nummer, rueckruf, e.bild, false,
+            { anzahl: (e.kapitel ? e.kapitel.length : 0),
+              hoerstand: kindHoerstandAnteil(e),
+              laeuft: (Vinzify.Kind.LAUFEND === e.id) });
         }
       }
     }
@@ -5314,7 +5819,8 @@ Vinzify.Kind.zeigePlaylist = function (stand, zielEl, quelleId, rueckruf) {
     kindLeeren(zielEl);
     if (!zielEl) { return; }
     quelle = kindQuelleFinden(stand, quelleId);
-    kindZurueckKopf(zielEl, quelle ? quelle.name : 'Playlist', rueckruf);
+    kindZurueckKopf(zielEl, quelle ? quelle.name : 'Playlist', rueckruf,
+      'Musik', quelle ? { id: quelle.id, bild: quelle.bild } : null, true);
     einstiegspunkte = (stand && stand.einstiegspunkte) ? stand.einstiegspunkte : [];
     nummer = 0;
     for (i = 0; i < einstiegspunkte.length; i = i + 1) {
@@ -5447,9 +5953,11 @@ Vinzify.Kind.starte = function (stand, zielEl, aktionen) {
   } catch (fehler) { }
 };
 
-/* kindPlayerTaste: großer runder Knopf (Hauptaktion 64–86px) mit
-   optionalem Inhaltselement (CSS-Form, KEINE Symbolschrift, E9). */
-function kindPlayerTaste(inhaltKlasse, label) {
+/* kindPlayerTaste: Taste des Wiedergabebalkens mit optionalem Inhalt
+   (CSS-Form, KEINE Symbolschrift, E9). Die Sprung-Glyphe besteht aus einem
+   Dreieck und einem Anschlagbalken; balkenZuerst === true stellt den Balken
+   nach vorn (Zurueck), sonst steht er hinten (Vor). */
+function kindPlayerTaste(inhaltKlasse, label, balkenZuerst) {
   var taste, inner;
   try {
     taste = kindElement('button', 'kind-player-taste');
@@ -5457,6 +5965,15 @@ function kindPlayerTaste(inhaltKlasse, label) {
     taste.setAttribute('aria-label', label);
     if (inhaltKlasse) {
       inner = kindElement('span', inhaltKlasse);
+      if (inhaltKlasse.indexOf('kind-player-sprung') === 0) {
+        if (balkenZuerst === true) {
+          inner.appendChild(kindElement('b', ''));
+          inner.appendChild(kindElement('i', ''));
+        } else {
+          inner.appendChild(kindElement('i', ''));
+          inner.appendChild(kindElement('b', ''));
+        }
+      }
       taste.appendChild(inner);
     }
     return taste;
@@ -5465,15 +5982,54 @@ function kindPlayerTaste(inhaltKlasse, label) {
   }
 }
 
-/* playerAktualisieren: zeigt im Player Cover, Name, Länge und Fortschritt
-   als REINE Anzeige (123 — der Balken ist NICHT antippbar und zählt nie
-   selbst weiter; das löst M5/135). Große Start-/Pause-Taste (64–86px) ruft
-   aktionen.pausiere() bzw. aktionen.starte(eintrag.id, eintrag.art);
-   Vor/Zurück rufen aktionen.vor()/aktionen.zurueck(). zustand optional:
-   { laeuft, fortschrittMs, dauerMs }; fehlt er → leerer Balken. Wirft nie. */
+/* kindKapitelPosition: „Kapitel 5 von 12" aus echten Daten — sucht die
+   laufende Spotify-Kennung (zustand.uri) in der Kapitelliste des Eintrags.
+   Ohne Treffer null (dann trägt die Unterzeile den Titelnamen). Wirft nie. */
+function kindKapitelPosition(eintrag, zustand) {
+  var i, k, uri;
+  try {
+    if (!eintrag || !eintrag.kapitel || !eintrag.kapitel.length) { return null; }
+    uri = (zustand && typeof zustand.uri === 'string') ? zustand.uri : '';
+    if (uri === '') { return null; }
+    for (i = 0; i < eintrag.kapitel.length; i = i + 1) {
+      k = eintrag.kapitel[i];
+      if (k && typeof k.id === 'string' && k.id !== '' && uri.indexOf(k.id) !== -1) {
+        return { nr: i + 1, gesamt: eintrag.kapitel.length };
+      }
+    }
+  } catch (fehler) { }
+  return null;
+}
+
+/* kindPlayerUnterzeile: was unter dem Namen steht. Erst die Kapitelstelle,
+   sonst der Name des laufenden Stücks, sonst nichts. Wirft nie. */
+function kindPlayerUnterzeile(eintrag, zustand) {
+  var pos;
+  try {
+    pos = kindKapitelPosition(eintrag, zustand);
+    if (pos) { return 'Kapitel ' + pos.nr + ' von ' + pos.gesamt; }
+    if (zustand && typeof zustand.name === 'string' && zustand.name !== '' &&
+        zustand.name !== eintrag.name) {
+      return zustand.name;
+    }
+  } catch (fehler) { }
+  return '';
+}
+
+/* playerAktualisieren: der Balken nach Entwurf A5 — Cover, Name mit
+   Unterzeile und Fortschritt als REINE Anzeige (123 — der Balken ist NICHT
+   antippbar und zählt nie selbst weiter; das löst M5/135), rechts die
+   Zeiten (gelaufen über gesamt) und vier Tasten in fester Reihenfolge:
+   Zurück (66 px), Start/Pause (86 px, hell), Vor (66 px), Merken (66 px).
+   Der vierte Platz bleibt IMMER belegt, damit die Tasten auf jedem
+   Bildschirm an derselben Stelle sitzen (98). Merken wirkt nur bei Titeln;
+   bei Geschichten ist das Herz sichtbar stumpf statt wirkungslos (E8).
+   zustand optional: { laeuft, fortschrittMs, dauerMs, uri, name }.
+   Wirft nie. */
 Vinzify.Kind.playerAktualisieren = function (playerEl, eintrag, zustand) {
   var a, laeuft, fortschrittMs, dauerMs, anteil, inner, cover, info, name,
-      zeit, balken, fuellung, tasten, tastePause, tasteVor, tasteZurueck;
+      unter, unterText, zeit, gesamtEl, balken, fuellung, tasten, tastePause,
+      tasteVor, tasteZurueck, tasteMerk, gemerkt, istTitel;
   try {
     kindLeeren(playerEl);
     if (!playerEl) { return; }
@@ -5487,27 +6043,41 @@ Vinzify.Kind.playerAktualisieren = function (playerEl, eintrag, zustand) {
     inner = kindElement('div', 'kind-player');
     cover = kindElement('span', 'kind-player-cover');
     Vinzify.Kind.coverZeichnen(cover, eintrag);
+
     info = kindElement('span', 'kind-player-info');
     name = kindElement('span', 'kind-player-name');
     name.textContent = kindText(eintrag.name);
-    zeit = kindElement('span', 'kind-player-zeit');
-    zeit.textContent = kindDauerText(fortschrittMs) + ' / ' + kindDauerText(dauerMs);
+    info.appendChild(name);
+    unterText = kindPlayerUnterzeile(eintrag, zustand);
+    if (unterText !== '') {
+      unter = kindElement('span', 'kind-player-unter');
+      unter.textContent = unterText;
+      info.appendChild(unter);
+    }
     balken = kindElement('span', 'kind-player-fortschritt');
     fuellung = kindElement('span', 'kind-player-fuellung');
     fuellung.style.width = '' + anteil + '%';
     balken.appendChild(fuellung);
-    info.appendChild(name);
-    info.appendChild(zeit);
     info.appendChild(balken);
 
+    /* Zeiten: gelaufen oben, gesamt darunter (A5). */
+    zeit = kindElement('span', 'kind-player-zeit');
+    zeit.appendChild(document.createTextNode(kindDauerText(fortschrittMs)));
+    gesamtEl = kindElement('em', '');
+    gesamtEl.textContent = kindDauerText(dauerMs);
+    zeit.appendChild(gesamtEl);
+
     tasten = kindElement('span', 'kind-player-tasten');
-    tasteZurueck = kindPlayerTaste('kind-player-pfeil kind-player-pfeil-l', 'Zurück');
+
+    tasteZurueck = kindPlayerTaste('kind-player-sprung zurueck', 'Zurück', true);
     kindKlick(tasteZurueck, null, null, function () {
       if (a && typeof a.zurueck === 'function') {
         try { a.zurueck(); } catch (fehler) { }
       }
     });
+
     tastePause = kindPlayerTaste('', laeuft ? 'Pause' : 'Start');
+    tastePause.className = 'kind-player-taste haupt';
     kindKlick(tastePause, null, null, function () {
       if (!a) { return; }
       if (laeuft && typeof a.pausiere === 'function') {
@@ -5523,18 +6093,39 @@ Vinzify.Kind.playerAktualisieren = function (playerEl, eintrag, zustand) {
     } else {
       tastePause.appendChild(kindElement('span', 'kind-player-dreieck'));
     }
-    tasteVor = kindPlayerTaste('kind-player-pfeil kind-player-pfeil-r', 'Vor');
+
+    tasteVor = kindPlayerTaste('kind-player-sprung vor', 'Vor', false);
     kindKlick(tasteVor, null, null, function () {
       if (a && typeof a.vor === 'function') {
         try { a.vor(); } catch (fehler) { }
       }
     });
 
+    /* Vierter Platz: Merken. Bei Titeln wirksam, sonst sichtbar stumpf. */
+    istTitel = (eintrag.art === 'titel');
+    gemerkt = false;
+    if (istTitel && Vinzify.Daten && typeof Vinzify.Daten.istGemerkt === 'function') {
+      try { gemerkt = (Vinzify.Daten.istGemerkt(eintrag.id) === true); } catch (fehler) { }
+    }
+    tasteMerk = kindPlayerTaste('', istTitel ? (gemerkt ? 'Nicht mehr merken' : 'Merken') : 'Merken (hier ohne Wirkung)');
+    tasteMerk.appendChild(kindHerz(istTitel ? (gemerkt ? 'an' : 'aus') : 'tot'));
+    if (istTitel) {
+      kindKlick(tasteMerk, eintrag.id, 'merken', function (id) {
+        if (a && typeof a.merke === 'function') {
+          try { a.merke(id); } catch (fehler) { }
+        }
+      });
+    } else {
+      tasteMerk.setAttribute('disabled', 'disabled');
+    }
+
     tasten.appendChild(tasteZurueck);
     tasten.appendChild(tastePause);
     tasten.appendChild(tasteVor);
+    tasten.appendChild(tasteMerk);
     inner.appendChild(cover);
     inner.appendChild(info);
+    inner.appendChild(zeit);
     inner.appendChild(tasten);
     playerEl.appendChild(inner);
   } catch (fehler) { }
@@ -5551,7 +6142,9 @@ Vinzify.Kind.zeigeKapitel = function (stand, zielEl, albumId, rueckruf) {
     kindLeeren(zielEl);
     if (!zielEl) { return; }
     album = kindEinstiegFinden(stand, albumId);
-    kindZurueckKopf(zielEl, album ? album.name : 'Geschichte', rueckruf);
+    kindZurueckKopf(zielEl, album ? album.name : 'Geschichte', rueckruf,
+      kindAnzahlText(album && album.kapitel ? album.kapitel.length : 0, 'kapitel'),
+      album, false);
     if (album && album.kapitel) {
       for (i = 0; i < album.kapitel.length; i = i + 1) {
         k = album.kapitel[i];
@@ -5581,12 +6174,13 @@ Vinzify.Kind.zeigeKapitel = function (stand, zielEl, albumId, rueckruf) {
    Leserichtung oben→unten; Zurück-Knopf. Wirft nie. */
 Vinzify.Kind.zeigeTitel = function (stand, zielEl, quelleId, rueckruf) {
   var quelle, einstiegspunkte, i, e, nummer, zeile, haupt, nummerEl,
-      nameEl, dauerEl, merk;
+      nameEl, dauerEl, merk, gemerkt;
   try {
     kindLeeren(zielEl);
     if (!zielEl) { return; }
     quelle = kindQuelleFinden(stand, quelleId);
-    kindZurueckKopf(zielEl, quelle ? quelle.name : 'Musik', rueckruf);
+    kindZurueckKopf(zielEl, quelle ? quelle.name : 'Musik', rueckruf,
+      'Musik', quelle ? { id: quelle.id, bild: quelle.bild } : null, true);
     einstiegspunkte = (stand && stand.einstiegspunkte) ? stand.einstiegspunkte : [];
     nummer = 0;
     for (i = 0; i < einstiegspunkte.length; i = i + 1) {
@@ -5606,10 +6200,14 @@ Vinzify.Kind.zeigeTitel = function (stand, zielEl, quelleId, rueckruf) {
       haupt.appendChild(nameEl);
       haupt.appendChild(dauerEl);
       kindKlick(haupt, e.id, 'titel', rueckruf);
+      gemerkt = false;
+      if (Vinzify.Daten && typeof Vinzify.Daten.istGemerkt === 'function') {
+        try { gemerkt = (Vinzify.Daten.istGemerkt(e.id) === true); } catch (fehler2) { }
+      }
       merk = kindElement('button', 'kind-merken');
       merk.setAttribute('type', 'button');
-      merk.setAttribute('aria-label', 'Merken');
-      merk.textContent = 'Merken';
+      merk.setAttribute('aria-label', gemerkt ? 'Nicht mehr merken' : 'Merken');
+      merk.appendChild(kindHerz(gemerkt ? 'an' : 'aus'));
       kindKlick(merk, e.id, 'merken', rueckruf);
       zeile.appendChild(haupt);
       zeile.appendChild(merk);
@@ -8579,10 +9177,29 @@ function verwaltungAnsichtSystem(inhalt, rueckruf) {
       spielStarten(id, art);
     },
     merke: function (id) {
-      var eintrag;
+      /* 186: Umschalter. Das Herz zeigt den Zustand, also muss es in
+         beide Richtungen wirken — sonst sähe es aus wie eine Taste,
+         die nichts tut (E8). */
+      var eintrag, drin;
       eintrag = findeEinstieg(id);
-      if (eintrag && Vinzify.Daten && typeof Vinzify.Daten.merken === 'function') {
+      if (!eintrag || !Vinzify.Daten) { return; }
+      drin = (typeof Vinzify.Daten.istGemerkt === 'function' &&
+              Vinzify.Daten.istGemerkt(id) === true);
+      if (drin) {
+        if (typeof Vinzify.Daten.merkenEntfernen === 'function') {
+          try { Vinzify.Daten.merkenEntfernen(id); } catch (fehler) { }
+        }
+      } else if (typeof Vinzify.Daten.merken === 'function') {
         try { Vinzify.Daten.merken(eintrag); } catch (fehler) { }
+      }
+      /* Herz sofort nachziehen: in der Liste und im Wiedergabebalken. */
+      if (aktuell) { try { zeichneEbene(aktuell); } catch (fehler) { } }
+      if (laufenderEintrag && Vinzify.Kind && Vinzify.Kind.playerEl &&
+          typeof Vinzify.Kind.playerAktualisieren === 'function') {
+        try {
+          Vinzify.Kind.playerAktualisieren(
+            Vinzify.Kind.playerEl, laufenderEintrag, letzterZustand);
+        } catch (fehler) { }
       }
     },
     pausiere: function () {
@@ -9063,10 +9680,27 @@ function verwaltungAnsichtSystem(inhalt, rueckruf) {
   function zustandRueckruf(zustand) {
     var eintrag;
     letzterZustand = zustand;
-    if (zustand === null || typeof zustand !== 'object') { return; }
+    if (zustand === null || typeof zustand !== 'object') {
+      /* Es läuft nichts mehr: der Ring auf der Kachel muss weg (E4). */
+      if (Vinzify.Kind && Vinzify.Kind.LAUFEND !== null) {
+        Vinzify.Kind.LAUFEND = null;
+        if (aktuell && aktuell.ebene === 'top') {
+          try { zeichneEbene(aktuell); } catch (fehler) { }
+        }
+      }
+      return;
+    }
     eintrag = findeEintragZuZustand(zustand);
     if (eintrag) {
       laufenderEintrag = eintrag;
+      /* Die Kachel des laufenden Eintrags trägt Ring und Abzeichen (E4).
+         Nur bei WECHSEL neu zeichnen, nicht bei jedem Zustandsruf. */
+      if (Vinzify.Kind && Vinzify.Kind.LAUFEND !== eintrag.id) {
+        Vinzify.Kind.LAUFEND = eintrag.id;
+        if (aktuell && aktuell.ebene === 'top') {
+          try { zeichneEbene(aktuell); } catch (fehler) { }
+        }
+      }
       if (Vinzify.Kind && Vinzify.Kind.playerEl &&
           typeof Vinzify.Kind.playerAktualisieren === 'function') {
         try { Vinzify.Kind.playerAktualisieren(Vinzify.Kind.playerEl, eintrag, zustand); } catch (fehler) { }
